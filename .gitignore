@@ -1,0 +1,4 @@
+.vscode/
+*.so
+*.h
+wpam.toml

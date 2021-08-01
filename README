@@ -1,0 +1,12 @@
+First compiling:
+sudo apt-get install -y pkg-config libcurl4-openssl-dev libpam0g-dev make build-essential
+
+Install:
+1. sudo nano /etc/ssh/sshd_config
+LoginGraceTime 15m
+ChallengeResponseAuthentication yes
+UsePAM yes
+
+2. sudo nano /etc/pam.d/sshd
+auth requisite /lib/security/pam-werbot.so
+account required /lib/security/pam-werbot.so
