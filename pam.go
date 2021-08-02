@@ -7,7 +7,7 @@ package main
 
 char *string_from_argv(int, char**);
 char *get_username(pam_handle_t *pamh);
-char *get_rhost(pam_handle_t *pamh);
+char *get_host(pam_handle_t *pamh);
 */
 import "C"
 
@@ -56,7 +56,7 @@ func pam_sm_authenticate(pamh *C.pam_handle_t, flags, argc C.int, argv **C.char)
 	defer C.free(unsafe.Pointer(cUsername))
 
 	// get remote user ip address
-	cRHost := C.get_rhost(pamh)
+	cRHost := C.get_host(pamh)
 	if cRHost == nil {
 		return C.PAM_USER_UNKNOWN
 	}

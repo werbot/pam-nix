@@ -10,3 +10,9 @@ UsePAM yes
 2. sudo nano /etc/pam.d/sshd
 auth requisite /lib/security/pam-werbot.so
 account required /lib/security/pam-werbot.so
+
+server_url=https://api.werbot.com
+service_id=bef57548-dfdd-4aba-a545-50aa9e4f50db
+service_key=7ba94fcbac95b794fc6efc25e1c23f0d6b
+offline_users= 
+debug=true

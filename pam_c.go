@@ -17,36 +17,26 @@ typedef const struct pam_message** MsgsT;
 typedef struct pam_response* RespsT;
 
 char *string_from_argv(int i, char **argv) {
-  return strdup(argv[i]);
+    return strdup(argv[i]);
 }
 
-char *get_username(pam_handle_t *pamh)
-{
+char *get_username(pam_handle_t *pamh){
     if (!pamh)
-    {
         return NULL;
-    }
     int pam_err = 0;
     const char *username;
     if ((pam_err = pam_get_user(pamh, &username, "login: ")) != PAM_SUCCESS)
-    {
         return NULL;
-    }
     return strdup(username);
 }
 
-char *get_rhost(pam_handle_t *pamh)
-{
+char *get_host(pam_handle_t *pamh){
     if (!pamh)
-    {
         return NULL;
-    }
     int pam_err = 0;
     const char *pamRHost;
     if ((pam_err = pam_get_item(pamh, PAM_RHOST, (const void **)&pamRHost) != PAM_SUCCESS))
-    {
         return NULL;
-    }
     return strdup(pamRHost);
 }
 
@@ -56,14 +46,12 @@ int do_conv(pam_handle_t* pamh, char* msg, RespsT* resp) {
 	struct pam_message *msgs = &_msg;
 	struct pam_conv* conv;
 	err = pam_get_item(pamh, PAM_CONV, (const void**)&conv);
-	if(err != PAM_SUCCESS) {
+	if(err != PAM_SUCCESS)
 		return err;
-	}
 	return conv->conv(1, (const MsgsT)&msgs, resp, conv->appdata_ptr);
 }
 
-int disable_ptrace()
-{
+int disable_ptrace(){
 #ifdef __APPLE__
     return ptrace(PT_DENY_ATTACH, 0, 0, 0);
 #elif __linux__
@@ -88,10 +76,8 @@ func conversation(pamh *C.pam_handle_t, msg string) (string, error) {
 	if code != C.PAM_SUCCESS || resp == nil {
 		return "", fmt.Errorf("PAM_CONV_ERR")
 	}
-
 	ret := C.GoString((*resp).resp)
 	C.free(unsafe.Pointer((*resp).resp))
-
 	return ret, nil
 }
 
