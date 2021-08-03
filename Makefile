@@ -2,12 +2,11 @@ MODULE_NAME=pam-werbot
 VERSION=$(shell git describe --tags --always)
 
 build:
-	@echo "building ${MODULE_NAME} ${MODULE_NAME}"
 	go build -buildmode=c-shared -o ${MODULE_NAME}.so
+	sudo chmod +x ${MODULE_NAME}.so
 
 install:
 	sudo cp ${MODULE_NAME}.so /lib/security/
-	sudo chmod +x /lib/security/${MODULE_NAME}.so
 	sudo systemctl restart sshd
 
 clean:
