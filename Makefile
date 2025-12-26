@@ -1,24 +1,85 @@
-MODULE_NAME=pam-werbot
-VERSION=$(shell git describe --tags --always)
+.PHONY: build install clean build-all help
 
+BIN_NAME=wpam
+VERSION=$(shell git describe --tags --always 2>/dev/null || echo "dev")
+
+# Detect OS and set PAM directory
+UNAME_S := $(shell uname -s 2>/dev/null || echo "Linux")
+ifeq ($(UNAME_S),Linux)
+	PAM_DIR=/lib/security
+	GOOS=linux
+endif
+ifeq ($(UNAME_S),Darwin)
+	PAM_DIR=/usr/lib/pam
+	GOOS=darwin
+endif
+ifeq ($(UNAME_S),FreeBSD)
+	PAM_DIR=/usr/lib
+	GOOS=freebsd
+endif
+ifeq ($(UNAME_S),OpenBSD)
+	PAM_DIR=/usr/lib
+	GOOS=openbsd
+endif
+ifeq ($(UNAME_S),NetBSD)
+	PAM_DIR=/usr/lib/security
+	GOOS=netbsd
+endif
+
+PAM_MODULE=$(PAM_DIR)/pam_wpam.so
+
+# Build for current platform
 build:
-	go build -buildmode=c-shared -o ${MODULE_NAME}.so
-	sudo chmod +x ${MODULE_NAME}.so
+	@echo "Building ${BIN_NAME} ${VERSION} for $(GOOS)/$(shell go env GOARCH)"
+	@echo "PAM directory: $(PAM_DIR)"
+	GOOS=$(GOOS) go build -buildmode=c-shared -o ${BIN_NAME}.so
 
-install:
-	sudo cp ${MODULE_NAME}.so /lib/security/
-	sudo systemctl restart sshd
+# Build for specific platform
+build-linux:
+	@echo "Building ${BIN_NAME} ${VERSION} for linux/amd64"
+	GOOS=linux GOARCH=amd64 go build -buildmode=c-shared -o ${BIN_NAME}-linux-amd64.so
+
+build-linux-arm64:
+	@echo "Building ${BIN_NAME} ${VERSION} for linux/arm64"
+	GOOS=linux GOARCH=arm64 go build -buildmode=c-shared -o ${BIN_NAME}-linux-arm64.so
+
+build-freebsd:
+	@echo "Building ${BIN_NAME} ${VERSION} for freebsd/amd64"
+	GOOS=freebsd GOARCH=amd64 go build -buildmode=c-shared -o ${BIN_NAME}-freebsd-amd64.so
+
+build-openbsd:
+	@echo "Building ${BIN_NAME} ${VERSION} for openbsd/amd64"
+	GOOS=openbsd GOARCH=amd64 go build -buildmode=c-shared -o ${BIN_NAME}-openbsd-amd64.so
+
+build-netbsd:
+	@echo "Building ${BIN_NAME} ${VERSION} for netbsd/amd64"
+	GOOS=netbsd GOARCH=amd64 go build -buildmode=c-shared -o ${BIN_NAME}-netbsd-amd64.so
+
+# Build for all supported platforms
+build-all: build-linux build-linux-arm64 build-freebsd build-openbsd build-netbsd
+	@echo "Built for all supported platforms"
+
+install: build
+	@echo "Installing ${BIN_NAME} to ${PAM_MODULE}"
+	@test -f ${BIN_NAME}.so || (echo "Error: ${BIN_NAME}.so not found. Run 'make build' first." && exit 1)
+	sudo cp ${BIN_NAME}.so ${PAM_MODULE}
+	sudo chmod 644 ${PAM_MODULE}
+	@echo "Module installed. Restart SSH service: sudo systemctl restart sshd"
 
 clean:
-	sudo rm -f ${MODULE_NAME}.so ${MODULE_NAME}.h
+	go clean
+	-rm -f ${BIN_NAME}.so ${BIN_NAME}.h
+	-rm -f ${BIN_NAME}-*.so
 
-test-install:
-	sudo sh -c "echo 'auth required ${PWD}/${MODULE_NAME}.so' > /etc/pam.d/${MODULE_NAME}"
-
-test-uninstall:
-	sudo rm -f /etc/pam.d/${MODULE_NAME}
-
-test:
-	pamtester ${MODULE_NAME} test authenticate
-
-.PHONY: build install clean
+help:
+	@echo "Available targets:"
+	@echo "  build          - Build for current platform"
+	@echo "  build-linux    - Build for Linux amd64"
+	@echo "  build-linux-arm64 - Build for Linux arm64"
+	@echo "  build-freebsd  - Build for FreeBSD amd64"
+	@echo "  build-openbsd  - Build for OpenBSD amd64"
+	@echo "  build-netbsd  - Build for NetBSD amd64"
+	@echo "  build-all      - Build for all supported platforms"
+	@echo "  install        - Build and install for current platform"
+	@echo "  clean          - Remove build artifacts"
+	@echo "  help           - Show this help message"
