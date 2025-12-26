@@ -37,27 +37,45 @@ build:
 # Build for specific platform
 build-linux:
 	@echo "Building ${BIN_NAME} ${VERSION} for linux/amd64"
-	GOOS=linux GOARCH=amd64 go build -buildmode=c-shared -o ${BIN_NAME}-linux-amd64.so
+	@echo "Note: CGO_ENABLED=1 is required for cross-compilation with CGO"
+	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -buildmode=c-shared -o ${BIN_NAME}-linux-amd64.so
 
 build-linux-arm64:
 	@echo "Building ${BIN_NAME} ${VERSION} for linux/arm64"
-	GOOS=linux GOARCH=arm64 go build -buildmode=c-shared -o ${BIN_NAME}-linux-arm64.so
+	@echo "Note: CGO_ENABLED=1 is required for cross-compilation with CGO"
+	CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -buildmode=c-shared -o ${BIN_NAME}-linux-arm64.so
 
 build-freebsd:
 	@echo "Building ${BIN_NAME} ${VERSION} for freebsd/amd64"
-	GOOS=freebsd GOARCH=amd64 go build -buildmode=c-shared -o ${BIN_NAME}-freebsd-amd64.so
+	@echo "Note: CGO_ENABLED=1 is required for cross-compilation with CGO"
+	CGO_ENABLED=1 GOOS=freebsd GOARCH=amd64 go build -buildmode=c-shared -o ${BIN_NAME}-freebsd-amd64.so
 
 build-openbsd:
 	@echo "Building ${BIN_NAME} ${VERSION} for openbsd/amd64"
-	GOOS=openbsd GOARCH=amd64 go build -buildmode=c-shared -o ${BIN_NAME}-openbsd-amd64.so
+	@echo "Note: CGO_ENABLED=1 is required for cross-compilation with CGO"
+	CGO_ENABLED=1 GOOS=openbsd GOARCH=amd64 go build -buildmode=c-shared -o ${BIN_NAME}-openbsd-amd64.so
 
 build-netbsd:
 	@echo "Building ${BIN_NAME} ${VERSION} for netbsd/amd64"
-	GOOS=netbsd GOARCH=amd64 go build -buildmode=c-shared -o ${BIN_NAME}-netbsd-amd64.so
+	@echo "Note: CGO_ENABLED=1 is required for cross-compilation with CGO"
+	CGO_ENABLED=1 GOOS=netbsd GOARCH=amd64 go build -buildmode=c-shared -o ${BIN_NAME}-netbsd-amd64.so
 
 # Build for all supported platforms
-build-all: build-linux build-linux-arm64 build-freebsd build-openbsd build-netbsd
-	@echo "Built for all supported platforms"
+# Note: Cross-compilation with CGO requires cross-compilers or Docker
+build-all:
+	@echo "Building for all supported platforms..."
+	@echo "Note: Some platforms may fail if cross-compilers are not available"
+	@echo "For reliable builds, use Docker or build on target platforms"
+	-@$(MAKE) build-linux || echo "Failed to build for linux/amd64"
+	-@$(MAKE) build-linux-arm64 || echo "Failed to build for linux/arm64"
+	-@$(MAKE) build-freebsd || echo "Failed to build for freebsd/amd64"
+	-@$(MAKE) build-openbsd || echo "Failed to build for openbsd/amd64"
+	-@$(MAKE) build-netbsd || echo "Failed to build for netbsd/amd64"
+	@echo ""
+	@echo "Build summary:"
+	@ls -lh ${BIN_NAME}-*.so 2>/dev/null || echo "No cross-compiled binaries found"
+	@echo ""
+	@echo "To build reliably, use Docker or build on target platforms"
 
 install: build
 	@echo "Installing ${BIN_NAME} to ${PAM_MODULE}"

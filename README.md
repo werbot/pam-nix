@@ -299,14 +299,36 @@ go build -buildmode=c-shared -o wpam.so
 ```
 
 **Cross-compilation:**
+
+For individual platforms:
 ```bash
 make build-linux      # Linux amd64
 make build-linux-arm64 # Linux arm64
 make build-freebsd    # FreeBSD amd64
 make build-openbsd    # OpenBSD amd64
 make build-netbsd     # NetBSD amd64
-make build-all        # All platforms
 ```
+
+**Build for all platforms:**
+
+Cross-compilation with CGO requires cross-compilers. Recommended approaches:
+
+1. **Using Docker (recommended):**
+```bash
+./build-all.sh
+```
+
+2. **Using Makefile (may fail without cross-compilers):**
+```bash
+make build-all
+```
+
+3. **Build on target platforms:**
+   - Build on Linux for Linux binaries
+   - Build on FreeBSD for FreeBSD binaries
+   - etc.
+
+**Note:** CGO cross-compilation from macOS to Linux requires special setup. For reliable builds, use Docker or build directly on target platforms.
 
 **Help:**
 ```bash
